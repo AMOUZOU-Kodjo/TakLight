@@ -47,9 +47,9 @@ export function ConnectionBanner() {
 
   return (
     <div
-      className={`sticky top-0 z-50 px-3 sm:px-4 py-1.5 sm:py-2 text-center text-xs sm:text-sm font-medium flex items-center justify-center gap-1.5 sm:gap-2 ${
+      className={`sticky top-0 z-50 px-3 sm:px-4 py-1.5 sm:py-2 text-center text-xs sm:text-sm font-medium flex items-center justify-center gap-1.5 sm:gap-2 animate-slide-down ${
         !isOnline
-          ? 'bg-red-500 text-white'
+          ? 'bg-red-500 text-white animate-pulse-slow'
           : isSlowConnection
           ? 'bg-yellow-400 text-gray-900'
           : 'bg-blue-500 text-white'

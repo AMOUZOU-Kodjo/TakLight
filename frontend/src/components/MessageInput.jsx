@@ -274,7 +274,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }) {
       )}
 
       {replyTo && (
-        <div className="px-3 sm:px-4 py-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex items-center gap-2">
+        <div className="px-3 sm:px-4 py-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex items-center gap-2 animate-slide-down">
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-primary-600 dark:text-primary-400 truncate">Réponse à {replyTo.sender?.username || 'message'}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{replyTo.content || (replyTo.mediaType === 'image' ? '📷 Photo' : replyTo.mediaType === 'audio' ? '🎤 Audio' : '')}</p>

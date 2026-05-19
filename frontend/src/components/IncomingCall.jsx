@@ -9,8 +9,8 @@ export function IncomingCall({ caller, onAccept, onReject }) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-      <div className="bg-gray-900 rounded-3xl shadow-2xl px-8 pb-8 pt-6 w-full max-w-sm text-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 animate-fade-in">
+      <div className="bg-gray-900 rounded-3xl shadow-2xl px-8 pb-8 pt-6 w-full max-w-sm text-center animate-fade-in">
         <div className="w-20 h-20 mx-auto mb-4 bg-primary-600 rounded-full flex items-center justify-center">
           {caller.avatarUrl ? (
             <img src={caller.avatarUrl} alt="" className="w-20 h-20 rounded-full object-cover" />

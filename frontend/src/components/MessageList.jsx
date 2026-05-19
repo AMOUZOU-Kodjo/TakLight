@@ -173,7 +173,7 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup, is
   const WAVE_BARS = 32;
 
   return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} items-end mb-0.5 animate-fade-in`}>
+    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} items-end mb-0.5 ${isOwn ? 'animate-fade-in-right' : 'animate-fade-in-left'}`}>
       {!isOwn && !selectMode && (
         <div className={`w-8 h-8 rounded-full overflow-hidden bg-gray-300 flex-shrink-0 mr-2 transition-all duration-200 ${showAvatar ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none'}`}>
           {message.sender?.avatarUrl ? (

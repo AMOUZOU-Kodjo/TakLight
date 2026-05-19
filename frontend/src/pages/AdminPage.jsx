@@ -131,7 +131,7 @@ export function AdminPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit">
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit overflow-x-auto">
           {[
             { id: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
             { id: 'users', label: 'Utilisateurs', icon: Users },
