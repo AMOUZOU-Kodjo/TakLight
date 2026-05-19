@@ -41,15 +41,15 @@ export function ChatPage() {
     initChat();
   }, [fetchConversations]);
 
-  // Sélection de la conversation depuis l'URL
+  // Sélection depuis l'URL (évite double appel si déjà sélectionné)
   useEffect(() => {
-    if (conversationId && conversations.length > 0) {
+    if (conversationId && conversations.length > 0 && conversationId !== currentConversation?.id) {
       const conversation = conversations.find((c) => c.id === conversationId);
       if (conversation) {
         selectConversation(conversation);
       }
     }
-  }, [conversationId, conversations, selectConversation]);
+  }, [conversationId, conversations, selectConversation, currentConversation?.id]);
 
   // Gestion responsive
   useEffect(() => {
@@ -93,8 +93,7 @@ export function ChatPage() {
 
   const handleSelectConversation = useCallback((conversation) => {
     selectConversation(conversation);
-    navigate(`/chat/${conversation.id}`);
-    
+    navigate(`/chat/${conversation.id}`, { replace: true });
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
     }
@@ -105,13 +104,13 @@ export function ChatPage() {
       const response = await api.post('/api/conversations/start', { userId });
       await fetchConversations();
       if (response.data.conversation) {
-        handleSelectConversation(response.data.conversation);
+        navigate(`/chat/${response.data.conversation.id}`);
       }
       setShowSearch(false);
     } catch (error) {
       console.error('Erreur lors de la création de conversation:', error);
     }
-  }, [fetchConversations, handleSelectConversation]);
+  }, [fetchConversations, navigate]);
 
   const handleStartConversation = useCallback((targetUser) => createConversation(targetUser.id), [createConversation]);
 
