@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "build:frontend": "cd \"../frontend\" && npm install && node node_modules/vite/bin/vite.js build",
-    "build": "npm run build:frontend && npx prisma generate",
+    "build": "npm run build:frontend && node node_modules/prisma/build/index.js generate",
     "start": "node src/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
