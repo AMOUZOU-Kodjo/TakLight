@@ -68,13 +68,5 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'emoji-picker': ['react-emoji-picker'],
-          'audio-recorder': [],
-        },
-      },
-    },
   },
 });
