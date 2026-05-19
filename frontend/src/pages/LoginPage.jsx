@@ -21,7 +21,7 @@ export function LoginPage() {
       await login(email, password);
       const { user } = useAuthStore.getState();
       if (user) {
-        connectSocket(user.id);
+        connectSocket();
         navigate('/chat');
       }
     } catch (err) {

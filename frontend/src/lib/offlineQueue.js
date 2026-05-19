@@ -17,7 +17,6 @@ class TalkLightDB extends Dexie {
 export const db = new TalkLightDB();
 
 class OfflineQueue {
-  processing = false;
   constructor() {
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
@@ -42,6 +41,24 @@ class OfflineQueue {
     this.processQueue();
   }
 
+  async trySend(conversationId, content, mediaData, tempId) {
+    if (!navigator.onLine) {
+      await this.addMessage({ conversationId, content, mediaUrl: mediaData?.mediaUrl, mediaType: mediaData?.mediaType, mediaThumbnailUrl: mediaData?.mediaThumbnailUrl, tempId });
+      return false;
+    }
+    try {
+      const payload = { content: content || '', tempId };
+      if (mediaData?.mediaUrl) payload.mediaUrl = mediaData.mediaUrl;
+      if (mediaData?.mediaType) payload.mediaType = mediaData.mediaType;
+      if (mediaData?.mediaThumbnailUrl) payload.mediaThumbnailUrl = mediaData.mediaThumbnailUrl;
+      await api.post(`/api/conversations/${conversationId}/messages`, payload);
+      return true;
+    } catch {
+      await this.addMessage({ conversationId, content, mediaUrl: mediaData?.mediaUrl, mediaType: mediaData?.mediaType, mediaThumbnailUrl: mediaData?.mediaThumbnailUrl, tempId });
+      return false;
+    }
+  }
+
   async addPendingUpload(file, conversationId) {
     const reader = new FileReader();
     const arrayBuffer = await new Promise((resolve, reject) => {
@@ -64,8 +81,6 @@ class OfflineQueue {
   }
 
   async processQueue() {
-    if (this.processing) return;
-    this.processing = true;
     try {
       const now = Date.now();
       const pending = await db.messages
@@ -74,7 +89,7 @@ class OfflineQueue {
         .sortBy('createdAt');
       for (const msg of pending) {
         try {
-          const payload = { content: msg.content || '' };
+          const payload = { content: msg.content || '', tempId: msg.tempId };
           if (msg.mediaUrl) payload.mediaUrl = msg.mediaUrl;
           if (msg.mediaType) payload.mediaType = msg.mediaType;
           if (msg.mediaThumbnailUrl) payload.mediaThumbnailUrl = msg.mediaThumbnailUrl;
@@ -99,9 +114,7 @@ class OfflineQueue {
           }
         }
       }
-    } finally {
-      this.processing = false;
-    }
+    } catch {}
   }
 
   async processPendingUploads() {

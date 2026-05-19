@@ -10,6 +10,7 @@ export const socket = io(WS_URL, {
   reconnectionDelay: 1000,
   reconnectionDelayMax: 10000,
   timeout: 20000,
+  withCredentials: true,
 });
 
 socket.on('connect', () => {
@@ -24,11 +25,10 @@ socket.on('connect_error', (error) => {
   console.error('WebSocket connection error:', error);
 });
 
-export function connectSocket(token) {
+export function connectSocket() {
   if (socket.connected) {
-    socket.disconnect();
+    return;
   }
-  socket.auth = { token };
   socket.connect();
 }
 

@@ -28,7 +28,7 @@ export function RegisterPage() {
       await register(email, username, password);
       const { user } = useAuthStore.getState();
       if (user) {
-        connectSocket(user.id);
+        connectSocket();
         navigate('/chat');
       }
     } catch (err) {

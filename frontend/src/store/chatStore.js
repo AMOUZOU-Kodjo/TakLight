@@ -95,19 +95,11 @@ export const useChatStore = create((set, get) => ({
       messages: [...state.messages, localMessage],
     }));
 
-    try {
-      await offlineQueue.addMessage({
-        conversationId,
-        content,
-        mediaUrl: mediaData?.mediaUrl || null,
-        mediaType: mediaData?.mediaType || null,
-        mediaThumbnailUrl: mediaData?.mediaThumbnailUrl || null,
-        tempId,
-      });
-    } catch (error) {
+    const sent = await offlineQueue.trySend(conversationId, content, mediaData, tempId);
+    if (!sent) {
       set((state) => ({
         messages: state.messages.map((m) =>
-          m.tempId === tempId ? { ...m, localStatus: 'failed' } : m
+          m.tempId === tempId ? { ...m, localStatus: 'pending' } : m
         ),
       }));
     }

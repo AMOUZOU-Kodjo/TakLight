@@ -35,10 +35,14 @@ export function MessageList() {
           {messages.map((message) => (
             <MessageBubble key={message.id || message.tempId} message={message} isOwn={message.senderId === user?.id} />
           ))}
-          {typingUsers.size > 0 && (
-            <div className="flex items-center gap-2 text-gray-500 text-sm italic px-4">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              {typingUsers.size === 1 ? 'est en train d\'écrire' : 'sont en train d\'écrire'}
+          {typingUsers.size > 0 && currentConversation && (
+            <div className="flex items-center gap-2 text-gray-500 text-sm italic px-1 sm:px-4 py-2">
+              <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+              <span>{currentConversation.otherUser.username} est en train d'écrire</span>
             </div>
           )}
         </>

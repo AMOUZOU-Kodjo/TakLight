@@ -61,7 +61,7 @@ export function VideoCallPage() {
 
   useEffect(() => {
     if (!user) return;
-    connectSocket(user.id);
+    connectSocket();
 
     const initCall = async () => {
       try {

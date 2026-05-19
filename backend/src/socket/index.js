@@ -1,5 +1,6 @@
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import cookie from 'cookie';
 import { config } from '../config/index.js';
 import { prisma } from '../lib/prisma.js';
 import { redis, redisKeys } from '../lib/redis.js';
@@ -7,7 +8,16 @@ import { redis, redisKeys } from '../lib/redis.js';
 export function setupSocketIO(io) {
   io.use(async (socket, next) => {
     try {
-      const token = socket.handshake.auth.token || socket.handshake.query.token;
+      let token = socket.handshake.auth.token;
+
+      if (!token) {
+        const cookies = socket.handshake.headers.cookie;
+        if (cookies) {
+          const parsed = cookie.parse(cookies);
+          token = parsed.accessToken;
+        }
+      }
+
       if (!token) {
         return next(new Error('Authentication required'));
       }

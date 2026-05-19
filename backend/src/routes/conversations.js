@@ -13,6 +13,7 @@ const sendMessageSchema = z.object({
   mediaUrl: z.string().optional(),
   mediaType: z.string().optional(),
   mediaThumbnailUrl: z.string().optional(),
+  tempId: z.string().optional(),
 });
 
 router.get('/', authMiddleware, async (req, res, next) => {
@@ -98,7 +99,7 @@ router.post('/:id/messages', authMiddleware, async (req, res, next) => {
       return res.status(404).json({ error: 'Conversation not found' });
     }
 
-    const { content, mediaUrl, mediaType, mediaThumbnailUrl } = sendMessageSchema.parse(req.body);
+    const { content, mediaUrl, mediaType, mediaThumbnailUrl, tempId } = sendMessageSchema.parse(req.body);
 
     if (!content && !mediaUrl) {
       return res.status(400).json({ error: 'Message content or media required' });
@@ -129,8 +130,11 @@ router.post('/:id/messages', authMiddleware, async (req, res, next) => {
     const otherUserId = conversation.user1Id === req.userId ? conversation.user2Id : conversation.user1Id;
 
     io.to(otherUserId).emit('message:new', message);
+    if (tempId) {
+      io.to(req.userId).emit('message:delivered', { messageId: message.id, tempId });
+    }
 
-    res.status(201).json({ message });
+    res.status(201).json({ message, messageId: message.id });
   } catch (error) {
     next(error);
   }

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { api } from '../lib/api';
 import { offlineQueue } from '../lib/offlineQueue';
@@ -11,24 +11,34 @@ export function MessageInput({ conversationId }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const { sendMessage } = useChatStore();
+  const { sendMessage, setTyping } = useChatStore();
   const inputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const recordingTimerRef = useRef(null);
   const fileInputRef = useRef(null);
+  const typingTimerRef = useRef(null);
 
-  const emojis = ['😀', '😂', '🥰', '😎', '🤔', '👍', '❤️', '🎉', '🔥', '😢', '🙏', '💪', '👋', '🤝', '✨', '📷', '🎤', '🎵'];
+  const handleTyping = useCallback(() => {
+    if (!conversationId) return;
+    setTyping(conversationId, true);
+    clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
+      setTyping(conversationId, false);
+    }, 2000);
+  }, [conversationId, setTyping]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!content.trim()) return;
-
-    await sendMessage(conversationId, content.trim());
-    setContent('');
-    setShowEmoji(false);
-    inputRef.current?.focus();
+  const handleInputChange = (e) => {
+    setContent(e.target.value);
+    handleTyping();
   };
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(typingTimerRef.current);
+      if (conversationId) setTyping(conversationId, false);
+    };
+  }, [conversationId, setTyping]);
 
   const handleInputChange = (e) => {
     setContent(e.target.value);
