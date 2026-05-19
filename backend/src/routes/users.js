@@ -12,6 +12,33 @@ const searchSchema = z.object({
   limit: z.coerce.number().min(1).max(50).default(20),
 });
 
+const listSchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(50).default(30),
+});
+
+router.get('/', authMiddleware, apiLimiter, async (req, res, next) => {
+  try {
+    const { page, limit } = listSchema.parse(req.query);
+    const offset = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where: { id: { not: req.userId }, isActive: true },
+        select: { id: true, username: true, avatarUrl: true, bio: true, lastSeen: true },
+        orderBy: { username: 'asc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.user.count({ where: { id: { not: req.userId }, isActive: true } }),
+    ]);
+
+    res.json({ users, total, page, hasMore: offset + users.length < total });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/search', authMiddleware, apiLimiter, async (req, res, next) => {
   try {
     const { q, page, limit } = searchSchema.parse(req.query);

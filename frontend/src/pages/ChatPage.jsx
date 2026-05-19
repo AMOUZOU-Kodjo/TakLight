@@ -9,6 +9,7 @@ import { MessageList } from '../components/MessageList';
 import { MessageInput } from '../components/MessageInput';
 import { ChatHeader } from '../components/ChatHeader';
 import { UserSearch } from '../components/UserSearch';
+import { UserList } from '../components/UserList';
 import { LogOut, User, Shield, Search, Menu, X } from 'lucide-react';
 
 export function ChatPage() {
@@ -53,6 +54,15 @@ export function ChatPage() {
     selectConversation(conv);
     navigate(`/chat/${conv.id}`);
     if (window.innerWidth < 768) setSidebarOpen(false);
+  }, []);
+
+  const handleStartConversation = useCallback(async (targetUser) => {
+    try {
+      const res = await api.post('/api/conversations/start', { userId: targetUser.id });
+      fetchConversations();
+      const conv = res.data.conversation;
+      handleSelectConversation(conv);
+    } catch {}
   }, []);
 
   const handleLogout = async () => {
@@ -168,18 +178,23 @@ export function ChatPage() {
             <MessageInput conversationId={currentConversation.id} />
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-500 px-4">
-            {!sidebarOpen && (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="mb-4 p-3 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors shadow-lg"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-            )}
-            <p className="text-lg font-medium">Sélectionnez une conversation</p>
-            <p className="text-sm mt-1 text-gray-400">ou recherchez un utilisateur</p>
-          </div>
+          <>
+            <div className="hidden md:flex flex-1 flex-col items-center justify-center text-gray-500 px-4">
+              {!sidebarOpen && (
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="mb-4 p-3 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors shadow-lg"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
+              )}
+              <p className="text-lg font-medium">Sélectionnez une conversation</p>
+              <p className="text-sm mt-1 text-gray-400">ou recherchez un utilisateur</p>
+            </div>
+            <div className="md:hidden flex-1 flex flex-col">
+              <UserList onSelectUser={handleStartConversation} />
+            </div>
+          </>
         )}
       </div>
     </div>
