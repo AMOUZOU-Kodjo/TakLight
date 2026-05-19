@@ -40,10 +40,6 @@ export function MessageInput({ conversationId }) {
     };
   }, [conversationId, setTyping]);
 
-  const handleInputChange = (e) => {
-    setContent(e.target.value);
-  };
-
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
