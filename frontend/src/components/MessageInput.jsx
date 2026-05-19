@@ -18,6 +18,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }) {
   const recordingTimerRef = useRef(null);
   const fileInputRef = useRef(null);
   const typingTimerRef = useRef(null);
+  const isSending = useRef(false);
 
   const handleTyping = useCallback(() => {
     if (!conversationId) return;
@@ -40,13 +41,17 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }) {
     };
   }, [conversationId, setTyping]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!content.trim()) return;
-    await sendMessage(conversationId, content.trim(), null, replyTo?.id);
+    const text = content.trim();
+    if (!text || isSending.current) return;
+    isSending.current = true;
     setContent('');
     setShowEmoji(false);
     if (onCancelReply) onCancelReply();
+    sendMessage(conversationId, text, null, replyTo?.id).finally(() => {
+      isSending.current = false;
+    });
     inputRef.current?.focus();
   };
 

@@ -156,14 +156,14 @@ socket.on('message:new', async (message) => {
   const { currentConversation, messages, conversations } = useChatStore.getState();
   const { user } = useAuthStore.getState();
 
-  if (message.senderId !== user?.id) {
-    showMessageNotification({
-      username: message.sender?.username || 'Nouveau message',
-      content: message.content,
-      mediaType: message.mediaType,
-      conversationId: message.conversationId,
-    });
-  }
+  if (message.senderId === user?.id) return;
+
+  showMessageNotification({
+    username: message.sender?.username || 'Nouveau message',
+    content: message.content,
+    mediaType: message.mediaType,
+    conversationId: message.conversationId,
+  });
 
   if (currentConversation && message.conversationId === currentConversation.id) {
     const exists = messages.some((m) => m.id === message.id);

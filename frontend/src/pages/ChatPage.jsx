@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
-import { disconnectSocket } from '../lib/socket';
 import { api } from '../lib/api';
 import { ConversationList } from '../components/ConversationList';
 import { MessageList } from '../components/MessageList';
@@ -40,10 +39,6 @@ export function ChatPage() {
       await fetchConversations();
     };
     initChat();
-
-    return () => {
-      disconnectSocket();
-    };
   }, [fetchConversations]);
 
   // Sélection de la conversation depuis l'URL
