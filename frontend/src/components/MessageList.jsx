@@ -24,7 +24,12 @@ export function MessageList() {
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 bg-gradient-to-b from-gray-50 to-gray-100"
+      className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3"
+      style={{
+        backgroundColor: '#f0f2f5',
+        backgroundImage: 'radial-gradient(circle, #d1d5db 0.8px, transparent 0.8px)',
+        backgroundSize: '20px 20px',
+      }}
     >
       {isLoading && messages.length === 0 ? (
         <div className="flex items-center justify-center py-8">
