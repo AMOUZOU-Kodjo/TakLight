@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { api } from '../lib/api';
 import { CheckCircle, XCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -50,7 +51,12 @@ export function InvitePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <>
+        <Helmet>
+          <title>Invitation invalide - TalkLight</title>
+          <meta name="robots" content="noindex" />
+        </Helmet>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="text-center">
           <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Invitation invalide</h1>
@@ -60,13 +66,21 @@ export function InvitePage() {
           </button>
         </div>
       </div>
+    </>
     );
   }
 
   const inviteUrl = `${window.location.origin}/invite/${slug}`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 px-4">
+    <>
+      <Helmet>
+        <title>{invitation.user.username} vous invite - TalkLight</title>
+        <meta name="description" content={`${invitation.user.username} vous invite à rejoindre TalkLight.`} />
+        <meta property="og:title" content={`${invitation.user.username} vous invite sur TalkLight`} />
+        <meta property="og:description" content="Rejoignez la conversation sur TalkLight, la messagerie qui parle même sur petit débit." />
+      </Helmet>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 px-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
@@ -90,5 +104,6 @@ export function InvitePage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

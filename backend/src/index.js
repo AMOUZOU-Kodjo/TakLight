@@ -89,9 +89,10 @@ const PORT = config.port;
 if (config.nodeEnv === 'production') {
   try {
     console.log('Running database migrations...');
-    execSync('node node_modules/prisma/build/index.js migrate deploy', {
+    execSync('npx prisma migrate deploy', {
       cwd: path.resolve(__dirname, '..'),
       stdio: 'inherit',
+      env: { ...process.env },
     });
     console.log('Migrations complete.');
   } catch (err) {

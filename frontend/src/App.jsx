@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { useAuthStore } from './store/authStore';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -69,6 +70,7 @@ function CallHandler() {
     <IncomingCall
       caller={incomingCall.caller || { id: incomingCall.from, username: '...' }}
       onAccept={() => {
+        socket.emit('call:accept', { target: incomingCall.from, conversationId: incomingCall.conversationId });
         setIncomingCall(null);
         navigate(`/call/${incomingCall.conversationId}?with=${incomingCall.from}&incoming=true`);
       }}
@@ -94,7 +96,27 @@ function PublicRoute({ children }) {
 
 export default function App() {
   return (
-    <>
+    <HelmetProvider>
+      <Helmet>
+        <html lang="fr" />
+        <meta property="og:title" content="TalkLight - Messagerie instantanée" />
+        <meta property="og:description" content="La messagerie qui parle même sur petit débit. Chattez en temps réel, passez des appels vidéo, même avec une connexion faible." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://talklight.onrender.com" />
+        <meta property="og:image" content="https://talklight.onrender.com/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="TalkLight - Messagerie instantanée" />
+        <meta name="twitter:description" content="La messagerie qui parle même sur petit débit." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "TalkLight",
+          "description": "Messagerie instantanée optimisée pour les connexions faibles",
+          "applicationCategory": "Communication",
+          "operatingSystem": "Web",
+          "offers": { "@type": "Offer", "price": "0" }
+        })}</script>
+      </Helmet>
       <AppInit />
       <ConnectionBanner />
       <CallHandler />
@@ -109,6 +131,6 @@ export default function App() {
         <Route path="/invite/:slug" element={<InvitePage />} />
         <Route path="/" element={<Navigate to="/chat" replace />} />
       </Routes>
-    </>
+    </HelmetProvider>
   );
 }

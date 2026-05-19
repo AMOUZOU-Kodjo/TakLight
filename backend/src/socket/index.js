@@ -122,8 +122,16 @@ export function setupSocketIO(io) {
       io.to(target).emit('webrtc:candidate', { candidate, from: userId });
     });
 
-    socket.on('call:start', ({ target, conversationId }) => {
-      io.to(target).emit('call:incoming', { from: userId, conversationId });
+    socket.on('call:start', async ({ target, conversationId }) => {
+      try {
+        const caller = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, username: true, avatarUrl: true },
+        });
+        io.to(target).emit('call:incoming', { from: userId, conversationId, caller });
+      } catch {
+        io.to(target).emit('call:incoming', { from: userId, conversationId });
+      }
     });
 
     socket.on('call:accept', ({ target, conversationId }) => {

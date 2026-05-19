@@ -14,6 +14,9 @@ export function playRingtone() {
   if (isPlaying) return;
   isPlaying = true;
   const ctx = getContext();
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
   gainNode = ctx.createGain();
   gainNode.gain.value = 0.3;
   gainNode.connect(ctx.destination);

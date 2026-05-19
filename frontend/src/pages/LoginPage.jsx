@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuthStore } from '../store/authStore';
 import { connectSocket } from '../lib/socket';
 import { MessageCircle, Loader2 } from 'lucide-react';
@@ -32,7 +33,14 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-900 dark:to-gray-800 px-4">
+    <>
+      <Helmet>
+        <title>Connexion - TalkLight</title>
+        <meta name="description" content="Connectez-vous à TalkLight, la messagerie qui parle même sur petit débit." />
+        <meta property="og:title" content="Connexion - TalkLight" />
+        <meta property="og:description" content="Connectez-vous à TalkLight pour chatter en temps réel." />
+      </Helmet>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-900 dark:to-gray-800 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-full mb-4">
@@ -100,5 +108,6 @@ export function LoginPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

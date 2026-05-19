@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Disallow: /chat
+Disallow: /profile
+Disallow: /admin
+Disallow: /call
+Disallow: /api
+
+Sitemap: https://talklight.onrender.com/sitemap.xml

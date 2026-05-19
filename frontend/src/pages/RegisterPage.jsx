@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuthStore } from '../store/authStore';
 import { connectSocket } from '../lib/socket';
 import { MessageCircle, Loader2, Check, X } from 'lucide-react';
@@ -39,7 +40,14 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-900 dark:to-gray-800 px-4">
+    <>
+      <Helmet>
+        <title>Inscription - TalkLight</title>
+        <meta name="description" content="Créez votre compte TalkLight et commencez à chatter en temps réel." />
+        <meta property="og:title" content="Inscription - TalkLight" />
+        <meta property="og:description" content="Créez votre compte TalkLight gratuitement." />
+      </Helmet>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-900 dark:to-gray-800 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-full mb-4">
@@ -136,6 +144,7 @@ export function RegisterPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

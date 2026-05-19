@@ -31,6 +31,7 @@ export function VideoCallPage() {
   const remoteVideoRef = useRef(null);
   const peerConnectionRef = useRef(null);
   const localStreamRef = useRef(null);
+  const storedOfferRef = useRef(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [callStatus, setCallStatus] = useState('connecting');
@@ -105,6 +106,12 @@ export function VideoCallPage() {
     if (!user || !otherUserId) return;
     connectSocket();
 
+    const socketListeners = [];
+    function on(event, handler) {
+      socket.on(event, handler);
+      socketListeners.push([event, handler]);
+    }
+
     const initCall = async () => {
       try {
         let videoConstraints = VIDEO_CONSTRAINTS[qualityTier] || VIDEO_CONSTRAINTS.medium;
@@ -120,7 +127,7 @@ export function VideoCallPage() {
           setCallStatus('ringing');
           playRingtone();
 
-          socket.on('webrtc:offer', async ({ offer }) => {
+          on('webrtc:offer', async ({ offer }) => {
             stopRingtone();
             await pc.setRemoteDescription(new RTCSessionDescription(offer));
             const answer = await pc.createAnswer();
@@ -132,12 +139,18 @@ export function VideoCallPage() {
         } else {
           const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: qualityTier !== 'audioOnly' });
           await pc.setLocalDescription(offer);
+          storedOfferRef.current = offer;
 
           socket.emit('call:start', { target: otherUserId, conversationId });
-
-          socket.emit('webrtc:offer', { target: otherUserId, offer, conversationId });
           setCallStatus('ringing');
           playRingtone();
+
+          on('call:accepted', () => {
+            stopRingtone();
+            if (storedOfferRef.current) {
+              socket.emit('webrtc:offer', { target: otherUserId, offer: storedOfferRef.current, conversationId });
+            }
+          });
         }
       } catch (err) {
         console.error('Failed to access media:', err);
@@ -147,7 +160,7 @@ export function VideoCallPage() {
 
     initCall();
 
-    socket.on('webrtc:answer', async ({ answer }) => {
+    on('webrtc:answer', async ({ answer }) => {
       if (peerConnectionRef.current) {
         stopRingtone();
         await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
@@ -156,7 +169,7 @@ export function VideoCallPage() {
       }
     });
 
-    socket.on('webrtc:candidate', async ({ candidate }) => {
+    on('webrtc:candidate', async ({ candidate }) => {
       if (peerConnectionRef.current) {
         try {
           await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
@@ -164,17 +177,17 @@ export function VideoCallPage() {
       }
     });
 
-    socket.on('call:rejected', () => {
+    on('call:rejected', () => {
       stopRingtone();
       setCallStatus('rejected');
     });
 
-    socket.on('call:ended', () => {
+    on('call:ended', () => {
       stopRingtone();
       endCall();
     });
 
-    socket.on('user:presence', ({ userId: uid, status }) => {
+    on('user:presence', ({ userId: uid, status }) => {
       if (uid === otherUserId && status === 'online') {
         setOtherUserName('');
       }
@@ -191,6 +204,7 @@ export function VideoCallPage() {
     return () => {
       endCall();
       if (conn) conn.removeEventListener('change', handleConnectionChange);
+      socketListeners.forEach(([event, handler]) => socket.off(event, handler));
     };
   }, [user, conversationId, otherUserId, isIncoming]);
 
