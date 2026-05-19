@@ -281,7 +281,7 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup, is
               />
             </div>
           ) : (
-            <p className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
+            <p className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words font-tangerine">{message.content}</p>
           )}
 
           {!selectMode && (
