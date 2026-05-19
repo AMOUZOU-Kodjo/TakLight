@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { execSync } from 'child_process';
 import { config } from './config/index.js';
 import { prisma } from './lib/prisma.js';
 import { redis } from './lib/redis.js';
@@ -84,6 +85,20 @@ if (fs.existsSync(frontendDist)) {
 setupSocketIO(io);
 
 const PORT = config.port;
+
+if (config.nodeEnv === 'production') {
+  try {
+    console.log('Running database migrations...');
+    execSync('node node_modules/prisma/build/index.js migrate deploy', {
+      cwd: path.resolve(__dirname, '..'),
+      stdio: 'inherit',
+    });
+    console.log('Migrations complete.');
+  } catch (err) {
+    console.error('Migration failed:', err.message);
+  }
+}
+
 httpServer.listen(PORT, () => {
   console.log(`🚀 TalkLight server running on port ${PORT}`);
   console.log(`📡 WebSocket available at ws://localhost:${PORT}${config.socketPath}`);
