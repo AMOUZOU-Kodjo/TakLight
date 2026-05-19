@@ -32,26 +32,26 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-900 dark:to-gray-800 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-full mb-4">
             <MessageCircle className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">TalkLight</h1>
-          <p className="text-gray-600 mt-2">La messagerie qui parle même sur petit débit</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">TalkLight</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">La messagerie qui parle même sur petit débit</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Connexion</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Connexion</h2>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-sm">{error}</div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email
               </label>
               <input
@@ -67,7 +67,7 @@ export function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Mot de passe
               </label>
               <input
@@ -91,7 +91,7 @@ export function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
             Pas encore de compte ?{' '}
             <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
               S'inscrire

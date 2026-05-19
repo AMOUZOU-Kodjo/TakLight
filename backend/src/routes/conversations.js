@@ -13,6 +13,7 @@ const sendMessageSchema = z.object({
   mediaUrl: z.string().optional(),
   mediaType: z.string().optional(),
   mediaThumbnailUrl: z.string().optional(),
+  replyToId: z.string().optional(),
   tempId: z.string().optional(),
 });
 
@@ -69,6 +70,7 @@ router.get('/:id/messages', authMiddleware, apiLimiter, async (req, res, next) =
       },
       include: {
         sender: { select: { id: true, username: true, avatarUrl: true } },
+        replyTo: { include: { sender: { select: { id: true, username: true, avatarUrl: true } } } },
       },
       orderBy: { sentAt: 'desc' },
       take: limit + 1,
@@ -76,6 +78,17 @@ router.get('/:id/messages', authMiddleware, apiLimiter, async (req, res, next) =
 
     const hasNextPage = messages.length > limit;
     const items = hasNextPage ? messages.slice(0, -1) : messages;
+
+    const filtered = items.filter((m) => {
+      if (!m.deletedFor) return true;
+      try {
+        const deletedFor = JSON.parse(m.deletedFor);
+        return !deletedFor.includes(req.userId);
+      } catch {
+        return true;
+      }
+    });
+
     const nextCursor = hasNextPage ? items[items.length - 1].id : undefined;
 
     await prisma.message.updateMany({
@@ -83,7 +96,7 @@ router.get('/:id/messages', authMiddleware, apiLimiter, async (req, res, next) =
       data: { isRead: true, readAt: new Date() },
     });
 
-    res.json({ messages: items.reverse(), nextCursor, hasNextPage });
+    res.json({ messages: filtered.reverse(), nextCursor, hasNextPage });
   } catch (error) {
     next(error);
   }
@@ -99,7 +112,7 @@ router.post('/:id/messages', authMiddleware, async (req, res, next) => {
       return res.status(404).json({ error: 'Conversation not found' });
     }
 
-    const { content, mediaUrl, mediaType, mediaThumbnailUrl, tempId } = sendMessageSchema.parse(req.body);
+    const { content, mediaUrl, mediaType, mediaThumbnailUrl, replyToId, tempId } = sendMessageSchema.parse(req.body);
 
     if (!content && !mediaUrl) {
       return res.status(400).json({ error: 'Message content or media required' });
@@ -113,9 +126,15 @@ router.post('/:id/messages', authMiddleware, async (req, res, next) => {
         mediaUrl: mediaUrl || null,
         mediaType: mediaType || null,
         mediaThumbnailUrl: mediaThumbnailUrl || null,
+        replyToId: replyToId || null,
       },
       include: {
         sender: { select: { id: true, username: true, avatarUrl: true } },
+        replyTo: {
+          include: {
+            sender: { select: { id: true, username: true, avatarUrl: true } },
+          },
+        },
       },
     });
 
@@ -140,22 +159,90 @@ router.post('/:id/messages', authMiddleware, async (req, res, next) => {
   }
 });
 
-router.delete('/messages/:id', authMiddleware, async (req, res, next) => {
+// GET /:id/search?q=...
+const searchSchema = z.object({
+  q: z.string().min(1).max(100),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(50).default(20),
+});
+
+router.get('/:id/search', authMiddleware, async (req, res, next) => {
+  try {
+    const { q, page, limit } = searchSchema.parse(req.query);
+    const offset = (page - 1) * limit;
+
+    const [messages, total] = await Promise.all([
+      prisma.message.findMany({
+        where: {
+          conversationId: req.params.id,
+          content: { contains: q, mode: 'insensitive' },
+          isDeleted: false,
+        },
+        include: {
+          sender: { select: { id: true, username: true, avatarUrl: true } },
+          replyTo: { include: { sender: { select: { id: true, username: true, avatarUrl: true } } } },
+        },
+        orderBy: { sentAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.message.count({
+        where: {
+          conversationId: req.params.id,
+          content: { contains: q, mode: 'insensitive' },
+          isDeleted: false,
+        },
+      }),
+    ]);
+
+    res.json({ messages, total, page, hasMore: offset + messages.length < total });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/:id/messages/:messageId', authMiddleware, async (req, res, next) => {
   try {
     const message = await prisma.message.findFirst({
-      where: { id: req.params.id, senderId: req.userId },
+      where: { id: req.params.messageId },
+      include: { conversation: { select: { user1Id: true, user2Id: true } } },
     });
 
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
     }
 
-    await prisma.message.update({
-      where: { id: req.params.id },
-      data: { isDeleted: true, content: 'Message deleted' },
-    });
+    const isSender = message.senderId === req.userId;
+    const isParticipant = message.conversation.user1Id === req.userId || message.conversation.user2Id === req.userId;
 
-    res.json({ message: 'Message deleted' });
+    if (!isParticipant) {
+      return res.status(403).json({ error: 'Not a participant' });
+    }
+
+    const forEveryone = req.query.forEveryone === 'true';
+
+    if (forEveryone && isSender) {
+      await prisma.message.update({
+        where: { id: req.params.messageId },
+        data: { isDeleted: true, content: null, mediaUrl: null, mediaType: null, mediaThumbnailUrl: null },
+      });
+
+      const otherUserId = message.conversation.user1Id === req.userId ? message.conversation.user2Id : message.conversation.user1Id;
+      io.to(otherUserId).emit('message:deleted', { messageId: req.params.messageId, forEveryone: true });
+
+      res.json({ message: 'Message deleted for everyone' });
+    } else {
+      const deletedFor = message.deletedFor ? JSON.parse(message.deletedFor) : [];
+      if (!deletedFor.includes(req.userId)) {
+        deletedFor.push(req.userId);
+      }
+      await prisma.message.update({
+        where: { id: req.params.messageId },
+        data: { deletedFor: JSON.stringify(deletedFor) },
+      });
+
+      res.json({ message: 'Message deleted for you' });
+    }
   } catch (error) {
     next(error);
   }

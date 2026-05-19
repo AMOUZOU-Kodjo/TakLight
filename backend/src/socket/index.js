@@ -122,6 +122,22 @@ export function setupSocketIO(io) {
       io.to(target).emit('webrtc:candidate', { candidate, from: userId });
     });
 
+    socket.on('call:start', ({ target, conversationId }) => {
+      io.to(target).emit('call:incoming', { from: userId, conversationId });
+    });
+
+    socket.on('call:accept', ({ target, conversationId }) => {
+      io.to(target).emit('call:accepted', { from: userId, conversationId });
+    });
+
+    socket.on('call:reject', ({ target, conversationId }) => {
+      io.to(target).emit('call:rejected', { from: userId, conversationId });
+    });
+
+    socket.on('call:end', ({ target, conversationId }) => {
+      io.to(target).emit('call:ended', { from: userId, conversationId });
+    });
+
     socket.on('disconnect', async () => {
       console.log(`User disconnected: ${userId}`);
       await redis.set(

@@ -41,13 +41,13 @@ class OfflineQueue {
     this.processQueue();
   }
 
-  async trySend(conversationId, content, mediaData, tempId) {
+  async trySend(conversationId, content, mediaData, tempId, replyToId = null) {
     if (!navigator.onLine) {
       await this.addMessage({ conversationId, content, mediaUrl: mediaData?.mediaUrl, mediaType: mediaData?.mediaType, mediaThumbnailUrl: mediaData?.mediaThumbnailUrl, tempId });
       return false;
     }
     try {
-      const payload = { content: content || '', tempId };
+      const payload = { content: content || '', tempId, replyToId };
       if (mediaData?.mediaUrl) payload.mediaUrl = mediaData.mediaUrl;
       if (mediaData?.mediaType) payload.mediaType = mediaData.mediaType;
       if (mediaData?.mediaThumbnailUrl) payload.mediaThumbnailUrl = mediaData.mediaThumbnailUrl;

@@ -16,7 +16,7 @@ import { InviteModal } from '../components/InviteModal';
 export function ChatPage() {
   const { conversationId } = useParams();
   const navigate = useNavigate();
-  const { logout } = useAuthStore();
+  const { logout, darkMode } = useAuthStore();
   const { 
     conversations, 
     currentConversation, 
@@ -31,6 +31,7 @@ export function ChatPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [replyToMessage, setReplyToMessage] = useState(null);
   const profileMenuRef = useRef(null);
 
   // Chargement initial
@@ -153,7 +154,7 @@ export function ChatPage() {
   };
 
   return (
-    <div className="h-screen flex bg-gray-100 overflow-hidden">
+    <div className="h-screen flex bg-gray-100 dark:bg-gray-900 overflow-hidden">
       {/* Overlay mobile */}
       {sidebarOpen && (
         <div
@@ -166,66 +167,87 @@ export function ChatPage() {
       <div
         className={`
           fixed md:relative z-30 md:z-0 h-full
-          w-80 flex-shrink-0 bg-white border-r border-gray-200
+          w-80 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
-        <div className="h-full flex flex-col bg-white">
-          <div className="p-4 border-b border-gray-200">
+        <div className="h-full flex flex-col bg-white dark:bg-gray-800">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold text-gray-900">TalkLight</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">TalkLight</h1>
               
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setShowInvite(true)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  title="Inviter des amis"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                 >
-                  <Share2 className="w-5 h-5 text-gray-600" />
+                  <Share2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
 
                 <button
                   onClick={toggleSearch}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                   title="Rechercher"
                 >
-                  <Search className="w-5 h-5 text-gray-600" />
+                  <Search className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
                 
                 {isAdmin && (
                   <button
                     onClick={handleAdminNavigation}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                     title="Administration"
                   >
-                    <Shield className="w-5 h-5 text-gray-600" />
+                    <Shield className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                   </button>
                 )}
                 
                 <div className="relative" ref={profileMenuRef}>
-                  <button
+                    <button
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                     title="Profil"
                   >
-                    <User className="w-5 h-5 text-gray-600" />
+                    <User className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                   </button>
                   
                   {showProfileMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-50">
                       <button
-                        onClick={handleProfileNavigation}
-                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                        onClick={() => { setShowMenu(false); navigate('/invite'); }}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-2"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        Inviter
+                      </button>
+                      {user?.role === 'admin' && (
+                        <button
+                          onClick={() => { setShowMenu(false); navigate('/admin'); }}
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-2"
+                        >
+                          <Shield className="w-4 h-4" />
+                          Admin
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { setShowMenu(false); navigate('/profile'); }}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-2"
                       >
                         <User className="w-4 h-4" />
-                        Mon profil
+                        Profil
                       </button>
-                      
+                      <button
+                        onClick={() => useAuthStore.getState().toggleDarkMode()}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-2"
+                      >
+                        <span className="w-4 h-4 flex items-center justify-center">{darkMode ? '☀️' : '🌙'}</span>
+                        {darkMode ? 'Mode clair' : 'Mode sombre'}
+                      </button>
                       <button
                         onClick={handleLogout}
-                        disabled={isLoggingOut}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 disabled:opacity-50"
+                        className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 disabled:opacity-50"
+                        disabled={loggingOut}
                       >
                         <LogOut className="w-4 h-4" />
                         {isLoggingOut ? 'Déconnexion...' : 'Déconnexion'}
@@ -236,10 +258,10 @@ export function ChatPage() {
                 
                 <button
                   onClick={toggleSidebar}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors md:hidden"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors md:hidden"
                   title="Fermer"
                 >
-                  <X className="w-5 h-5 text-gray-600" />
+                  <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
               </div>
             </div>
@@ -269,12 +291,16 @@ export function ChatPage() {
               conversation={currentConversation}
               onToggleSidebar={toggleSidebar}
             />
-            <MessageList />
-            <MessageInput conversationId={currentConversation.id} />
+            <MessageList onReply={setReplyToMessage} />
+            <MessageInput
+              conversationId={currentConversation.id}
+              replyTo={replyToMessage}
+              onCancelReply={() => setReplyToMessage(null)}
+            />
           </>
         ) : (
           <>
-            <div className="hidden md:flex flex-1 flex-col items-center justify-center text-gray-500 px-4">
+            <div className="hidden md:flex flex-1 flex-col items-center justify-center text-gray-500 dark:text-gray-400 px-4">
               {!sidebarOpen && (
                 <button
                   onClick={toggleSidebar}
@@ -288,10 +314,10 @@ export function ChatPage() {
             </div>
             
             <div className="md:hidden flex-1 flex flex-col">
-              <div className="p-4 border-b border-gray-200 bg-white">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <button
                   onClick={toggleSidebar}
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                  className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                 >
                   <Menu className="w-5 h-5" />
                   <span>Menu</span>

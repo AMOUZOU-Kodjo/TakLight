@@ -5,7 +5,7 @@ import { offlineQueue } from '../lib/offlineQueue';
 import { compressImage } from '../lib/compressImage';
 import { Send, Smile, Paperclip, Mic, X, StopCircle } from 'lucide-react';
 
-export function MessageInput({ conversationId }) {
+export function MessageInput({ conversationId, replyTo, onCancelReply }) {
   const [content, setContent] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -43,9 +43,10 @@ export function MessageInput({ conversationId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content.trim()) return;
-    await sendMessage(conversationId, content.trim());
+    await sendMessage(conversationId, content.trim(), null, replyTo?.id);
     setContent('');
     setShowEmoji(false);
+    if (onCancelReply) onCancelReply();
     inputRef.current?.focus();
   };
 
@@ -159,7 +160,7 @@ export function MessageInput({ conversationId }) {
   }, []);
 
   return (
-    <div className="border-t border-gray-200 bg-white">
+    <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       {isRecording && (
         <div className="px-4 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -176,7 +177,7 @@ export function MessageInput({ conversationId }) {
       )}
 
       {showEmoji && (
-        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
           <div className="flex flex-wrap gap-2">
             {emojis.map((emoji) => (
               <button
@@ -197,7 +198,19 @@ export function MessageInput({ conversationId }) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3">
+      {replyTo && (
+        <div className="px-3 sm:px-4 py-2 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-primary-600 dark:text-primary-400 truncate">Réponse à {replyTo.sender?.username || 'message'}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{replyTo.content || (replyTo.mediaType === 'image' ? '📷 Photo' : replyTo.mediaType === 'audio' ? '🎤 Audio' : '')}</p>
+          </div>
+          <button onClick={onCancelReply} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full shrink-0">
+            <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          </button>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <input
           type="file"
           ref={fileInputRef}
@@ -210,7 +223,7 @@ export function MessageInput({ conversationId }) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isRecording}
-          className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+          className="p-1.5 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors disabled:opacity-50"
           title="Joindre un fichier"
         >
           {isUploading ? (
@@ -247,9 +260,7 @@ export function MessageInput({ conversationId }) {
           onClick={isRecording ? stopRecording : startRecording}
           disabled={isUploading}
           className={`p-1.5 sm:p-2 rounded-full transition-colors disabled:opacity-50 ${
-            isRecording
-              ? 'bg-red-500 text-white hover:bg-red-600'
-              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+            showEmoji ? 'text-primary-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
           }`}
           title={isRecording ? 'Arrêter' : 'Enregistrer un audio'}
         >

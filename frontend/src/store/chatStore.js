@@ -3,6 +3,7 @@ import { api } from '../lib/api';
 import { socket } from '../lib/socket';
 import { offlineQueue, db } from '../lib/offlineQueue';
 import { useAuthStore } from './authStore';
+import { showMessageNotification } from '../lib/notifications';
 
 export const useChatStore = create((set, get) => ({
   conversations: [],
@@ -69,7 +70,7 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  sendMessage: async (conversationId, content, mediaData = null) => {
+  sendMessage: async (conversationId, content, mediaData = null, replyToId = null) => {
     const tempId = `temp-${Date.now()}-${Math.random()}`;
     const { user } = useAuthStore.getState();
 
@@ -81,6 +82,7 @@ export const useChatStore = create((set, get) => ({
       mediaUrl: mediaData?.mediaUrl || null,
       mediaType: mediaData?.mediaType || null,
       mediaThumbnailUrl: mediaData?.mediaThumbnailUrl || null,
+      replyToId,
       isRead: false,
       isDeleted: false,
       sentAt: new Date().toISOString(),
@@ -89,13 +91,14 @@ export const useChatStore = create((set, get) => ({
       sender: { id: user.id, username: user.username, avatarUrl: user.avatarUrl },
       localStatus: 'pending',
       tempId,
+      replyTo: null,
     };
 
     set((state) => ({
       messages: [...state.messages, localMessage],
     }));
 
-    const sent = await offlineQueue.trySend(conversationId, content, mediaData, tempId);
+    const sent = await offlineQueue.trySend(conversationId, content, mediaData, tempId, replyToId);
     if (!sent) {
       set((state) => ({
         messages: state.messages.map((m) =>
@@ -124,10 +127,43 @@ export const useChatStore = create((set, get) => ({
   setTyping: (conversationId, isTyping) => {
     socket.emit('user:typing', { conversationId, isTyping });
   },
+
+  deleteMessage: async (conversationId, messageId, forEveryone = false) => {
+    try {
+      await api.delete(`/api/conversations/${conversationId}/messages/${messageId}`, {
+        params: { forEveryone },
+      });
+      if (forEveryone) {
+        useChatStore.setState((state) => ({
+          messages: state.messages.map((m) =>
+            m.id === messageId
+              ? { ...m, isDeleted: true, content: null, mediaUrl: null, mediaType: null, mediaThumbnailUrl: null }
+              : m
+          ),
+        }));
+      } else {
+        useChatStore.setState((state) => ({
+          messages: state.messages.filter((m) => m.id !== messageId),
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to delete message:', err);
+    }
+  },
 }));
 
-socket.on('message:new', (message) => {
+socket.on('message:new', async (message) => {
   const { currentConversation, messages, conversations } = useChatStore.getState();
+  const { user } = useAuthStore.getState();
+
+  if (message.senderId !== user?.id) {
+    showMessageNotification({
+      username: message.sender?.username || 'Nouveau message',
+      content: message.content,
+      mediaType: message.mediaType,
+      conversationId: message.conversationId,
+    });
+  }
 
   if (currentConversation && message.conversationId === currentConversation.id) {
     const exists = messages.some((m) => m.id === message.id);
@@ -187,5 +223,15 @@ socket.on('user:typing', ({ conversationId, userId, isTyping }) => {
 socket.on('user:presence', ({ userId, status, lastSeen }) => {
   useChatStore.setState((state) => ({
     presence: { ...state.presence, [userId]: { status, lastSeen } },
+  }));
+});
+
+socket.on('message:deleted', ({ messageId, forEveryone }) => {
+  useChatStore.setState((state) => ({
+    messages: state.messages.map((m) =>
+      m.id === messageId
+        ? { ...m, isDeleted: true, content: null, mediaUrl: null, mediaType: null, mediaThumbnailUrl: null }
+        : m
+    ),
   }));
 });

@@ -1,9 +1,44 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
 
-export const useAuthStore = create((set) => ({
+function getInitialDarkMode() {
+  try {
+    const saved = localStorage.getItem('talklight-dark-mode');
+    if (saved !== null) return saved === 'true';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch {
+    return false;
+  }
+}
+
+export const useAuthStore = create((set, get) => ({
   user: null,
   isInitialized: false,
+  darkMode: getInitialDarkMode(),
+
+  setDarkMode: (value) => {
+    set({ darkMode: value });
+    localStorage.setItem('talklight-dark-mode', value);
+    if (value) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  },
+
+  toggleDarkMode: () => {
+    const { darkMode } = get();
+    get().setDarkMode(!darkMode);
+  },
+
+  initDarkMode: () => {
+    const { darkMode } = get();
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  },
 
   setUser: (user) => set({ user, isInitialized: true }),
 

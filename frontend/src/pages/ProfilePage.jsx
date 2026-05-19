@@ -147,23 +147,23 @@ export function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600">Chargement du profil...</p>
+          <p className="text-gray-600 dark:text-gray-400">Chargement du profil...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header avec navigation */}
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="group flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-all duration-200"
+            className="group flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 transition-all duration-200"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             <span>Retour</span>
@@ -172,10 +172,10 @@ export function ProfilePage() {
 
         {/* Messages de notification */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-slideIn">
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 rounded-lg animate-slideIn">
             <div className="flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-              <p className="text-red-700 text-sm flex-1">{error}</p>
+              <p className="text-red-700 dark:text-red-400 text-sm flex-1">{error}</p>
               <button onClick={() => setError('')} className="text-red-600 hover:text-red-800">
                 <X className="w-4 h-4" />
               </button>
@@ -184,10 +184,10 @@ export function ProfilePage() {
         )}
 
         {success && (
-          <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg animate-slideIn">
+          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 rounded-lg animate-slideIn">
             <div className="flex items-center gap-3">
               <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-              <p className="text-green-700 text-sm flex-1">{success}</p>
+              <p className="text-green-700 dark:text-green-400 text-sm flex-1">{success}</p>
               <button onClick={() => setSuccess('')} className="text-green-600 hover:text-green-800">
                 <X className="w-4 h-4" />
               </button>
@@ -196,7 +196,7 @@ export function ProfilePage() {
         )}
 
         {/* Carte principale */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-2xl">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 hover:shadow-2xl">
           {/* Bannière de couverture */}
           <div className="relative h-40 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700">
             <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity" />
@@ -206,7 +206,7 @@ export function ProfilePage() {
           <div className="px-8 pb-8">
             <div className="flex flex-col md:flex-row items-start md:items-end -mt-16 mb-6 gap-4">
               <div className="relative group">
-                <div className="w-28 h-28 md:w-32 md:h-32 bg-white rounded-2xl p-1 shadow-xl">
+                <div className="w-28 h-28 md:w-32 md:h-32 bg-white dark:bg-gray-800 rounded-2xl p-1 shadow-xl">
                   <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-50 rounded-xl flex items-center justify-center overflow-hidden">
                     {avatarPreview ? (
                       <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover rounded-xl" />
@@ -241,7 +241,7 @@ export function ProfilePage() {
               </div>
               
               <div className="flex-1 text-center md:text-left">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                   {user.username}
                 </h1>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
@@ -251,7 +251,7 @@ export function ProfilePage() {
                       Administrateur
                     </span>
                   )}
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
                     Membre depuis {new Date(user.createdAt).toLocaleDateString('fr-FR', { 
                       year: 'numeric', 
                       month: 'long' 
@@ -262,24 +262,24 @@ export function ProfilePage() {
             </div>
 
             {/* Informations de contact */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-4 bg-gray-50 rounded-xl">
-              <div className="flex items-center gap-3 text-gray-700">
-                <div className="p-2 bg-white rounded-lg shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+              <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                   <Mail className="w-4 h-4 text-primary-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Email</p>
-                  <p className="text-sm font-medium text-gray-900">{user.email}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user.email}</p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 text-gray-700">
-                <div className="p-2 bg-white rounded-lg shadow-sm">
+              <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                   <Calendar className="w-4 h-4 text-primary-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Date d'inscription</p>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Date d'inscription</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {new Date(user.createdAt).toLocaleDateString('fr-FR', {
                       day: 'numeric',
                       month: 'long',
@@ -291,11 +291,11 @@ export function ProfilePage() {
             </div>
 
             {/* Section des informations personnelles */}
-            <div className="border-t border-gray-200 pt-6">
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Informations personnelles</h2>
-                  <p className="text-sm text-gray-500 mt-1">Gérez vos informations de profil</p>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Informations personnelles</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gérez vos informations de profil</p>
                 </div>
                 
                 {!isEditing && (
@@ -311,7 +311,7 @@ export function ProfilePage() {
 
               <form onSubmit={handleSave} className="space-y-6">
                 <div>
-                  <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="username" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Nom d'utilisateur
                   </label>
                   {isEditing ? (
@@ -329,20 +329,20 @@ export function ProfilePage() {
                         maxLength={50}
                         required
                       />
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         Lettres, chiffres et underscores uniquement. 3-50 caractères.
                       </p>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400">@</span>
-                      <span className="text-gray-900 font-medium">{user.username}</span>
+                      <span className="text-gray-400 dark:text-gray-400">@</span>
+                      <span className="text-gray-900 dark:text-white font-medium">{user.username}</span>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="bio" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="bio" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Bio
                   </label>
                   {isEditing ? (
@@ -357,7 +357,7 @@ export function ProfilePage() {
                         placeholder="Parlez-nous un peu de vous..."
                       />
                       <div className="flex justify-between items-center mt-1">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {bio.length}/500 caractères
                         </p>
                         {bio.length === 500 && (
@@ -366,9 +366,9 @@ export function ProfilePage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <p className="text-gray-700 leading-relaxed">
-                        {user.bio || <span className="text-gray-400 italic">Aucune bio pour le moment</span>}
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                        {user.bio || <span className="text-gray-400 dark:text-gray-400 italic">Aucune bio pour le moment</span>}
                       </p>
                     </div>
                   )}
@@ -397,7 +397,7 @@ export function ProfilePage() {
                     <button
                       type="button"
                       onClick={handleCancelEdit}
-                      className="flex items-center justify-center gap-2 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                      className="flex items-center justify-center gap-2 px-6 py-2 border border-gray-300 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
                     >
                       <X className="w-5 h-5" />
                       Annuler
@@ -411,7 +411,7 @@ export function ProfilePage() {
 
         {/* Section aide */}
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-400 dark:text-gray-400">
             Besoin d'aide ? Contactez le support
           </p>
         </div>

@@ -12,6 +12,15 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  .dark body,
+  body.dark {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
   ::-webkit-scrollbar {
     width: 6px;
   }
@@ -24,8 +33,16 @@
     @apply bg-gray-300 rounded-full;
   }
 
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-gray-600;
+  }
+
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-400;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
   }
 }
 
@@ -38,8 +55,16 @@
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors;
   }
 
+  .dark .btn-secondary {
+    @apply bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-600;
+  }
+
   .input-field {
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow;
+  }
+
+  .dark .input-field {
+    @apply bg-gray-700 border-gray-600 text-gray-200;
   }
 
   .message-bubble-sent {
@@ -50,8 +75,27 @@
     @apply bg-white text-gray-900 rounded-2xl rounded-tl-sm shadow-sm;
   }
 
+  .dark .message-bubble-received {
+    @apply bg-gray-700 text-gray-100;
+  }
+
   .skeleton {
     @apply animate-pulse bg-gray-200 rounded;
+  }
+
+  .dark .skeleton {
+    @apply bg-gray-600;
+  }
+
+  .chat-bg {
+    background-color: #f0f2f5;
+    background-image: radial-gradient(#e0e2e5 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .dark .chat-bg {
+    background-color: #1a1a2e;
+    background-image: radial-gradient(#2a2a4e 1px, transparent 1px);
   }
 }
 

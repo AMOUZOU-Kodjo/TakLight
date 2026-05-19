@@ -61,14 +61,18 @@ model Message {
   mediaUrl          String?    @map("media_url")
   mediaType         String?    @map("media_type")
   mediaThumbnailUrl String?    @map("media_thumbnail_url")
+  replyToId         String?    @map("reply_to_id")
   isRead            Boolean    @default(false) @map("is_read")
   isDeleted         Boolean    @default(false) @map("is_deleted")
+  deletedFor        String?    @map("deleted_for")
   sentAt            DateTime   @default(now()) @map("sent_at")
   deliveredAt       DateTime?  @map("delivered_at")
   readAt            DateTime?  @map("read_at")
 
   conversation      Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender            User       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo           Message?   @relation("MessageReply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies           Message[]  @relation("MessageReply")
 
   @@index([conversationId, sentAt(sort: Desc)])
   @@index([senderId, sentAt(sort: Desc)])
