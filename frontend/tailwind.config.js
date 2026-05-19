@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        tangerine: ['Tangerine', 'cursive'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         primary: {
