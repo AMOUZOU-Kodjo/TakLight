@@ -138,6 +138,10 @@ export function setupSocketIO(io) {
       io.to(target).emit('call:accepted', { from: userId, conversationId });
     });
 
+    socket.on('call:ready', ({ target, conversationId }) => {
+      io.to(target).emit('call:ready', { from: userId, conversationId });
+    });
+
     socket.on('call:reject', ({ target, conversationId }) => {
       io.to(target).emit('call:rejected', { from: userId, conversationId });
     });

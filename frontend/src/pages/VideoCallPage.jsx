@@ -136,6 +136,8 @@ export function VideoCallPage() {
             setCallStatus('connected');
             timerRef.current = setInterval(() => setCallDuration((prev) => prev + 1), 1000);
           });
+
+          socket.emit('call:ready', { target: otherUserId, conversationId });
         } else {
           const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: qualityTier !== 'audioOnly' });
           await pc.setLocalDescription(offer);
@@ -145,7 +147,7 @@ export function VideoCallPage() {
           setCallStatus('ringing');
           playRingtone();
 
-          on('call:accepted', () => {
+          on('call:ready', () => {
             stopRingtone();
             if (storedOfferRef.current) {
               socket.emit('webrtc:offer', { target: otherUserId, offer: storedOfferRef.current, conversationId });
