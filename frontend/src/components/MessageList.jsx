@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
-import { Check, CheckCheck, AlertCircle, Loader2, Play, Pause, Reply, MoreVertical, Trash2, CheckSquare, Square } from 'lucide-react';
+import { Check, CheckCheck, AlertCircle, Loader2, Play, Pause, Reply, MoreVertical, Trash2, CheckSquare, Square, Download } from 'lucide-react';
 
 const GROUP_INTERVAL = 120000;
+
+let globalAudioRef = null;
+let globalAudioCallback = null;
 
 export function MessageList({ onReply }) {
   const { messages, isLoading, hasMore, nextCursor, fetchMessages, currentConversation, typingUsers, selectedMessages, toggleSelectMessage, clearSelection } = useChatStore();
@@ -97,7 +100,9 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup, is
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [audioDuration, setAudioDuration] = useState(0);
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+  const [audioSpeed, setAudioSpeed] = useState(1);
   const audioRef = useRef(null);
+  const waveformRef = useRef(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
@@ -127,18 +132,45 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup, is
     }
   };
 
-  const toggleAudio = () => {
+  const toggleAudio = useCallback(() => {
     if (audioRef.current) {
-      if (audioPlaying) audioRef.current.pause();
-      else audioRef.current.play();
-      setAudioPlaying(!audioPlaying);
+      if (audioPlaying) {
+        audioRef.current.pause();
+        setAudioPlaying(false);
+      } else {
+        if (globalAudioRef && globalAudioRef !== audioRef.current) {
+          globalAudioRef.pause();
+          if (globalAudioCallback) globalAudioCallback(false);
+        }
+        globalAudioRef = audioRef.current;
+        globalAudioCallback = (playing) => setAudioPlaying(playing);
+        audioRef.current.play().then(() => setAudioPlaying(true)).catch(() => {});
+      }
     }
+  }, [audioPlaying]);
+
+  const handleAudioSeek = (e) => {
+    if (!audioRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, x / rect.width));
+    audioRef.current.currentTime = ratio * audioDuration;
+    setAudioCurrentTime(audioRef.current.currentTime);
+  };
+
+  const cycleSpeed = () => {
+    const speeds = [1, 1.5, 2];
+    const next = speeds[(speeds.indexOf(audioSpeed) + 1) % speeds.length];
+    setAudioSpeed(next);
+    if (audioRef.current) audioRef.current.playbackRate = next;
   };
 
   const formatAudioTime = (time) => {
     if (!time || isNaN(time)) return '0:00';
     return `${Math.floor(time / 60)}:${Math.floor(time % 60).toString().padStart(2, '0')}`;
   };
+
+  const WAVE_BARS = 32;
 
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} items-end mb-0.5 animate-fade-in`}>
@@ -194,31 +226,56 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup, is
               {message.content && <p className="text-sm px-3 sm:px-4 pt-2 pb-1">{message.content}</p>}
             </div>
           ) : message.mediaType === 'audio' ? (
-            <div className={`flex items-center gap-3 min-w-[180px] sm:min-w-[220px] ${isOwn ? '' : ''}`}>
-              <button
-                onClick={(e) => { e.stopPropagation(); toggleAudio(); }}
-                className={`p-2.5 rounded-full flex-shrink-0 transition-all ${
-                  isOwn ? 'bg-white/20 hover:bg-white/30 active:scale-95' : 'bg-primary-100 dark:bg-gray-600 hover:bg-primary-200 dark:hover:bg-gray-500 active:scale-95'
-                }`}
-              >
-                {audioPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              </button>
-              <div className="flex-1 min-w-0">
-                <div className={`h-1.5 rounded-full overflow-hidden ${isOwn ? 'bg-white/30' : 'bg-gray-200 dark:bg-gray-600'}`}>
-                  <div
-                    className={`h-full rounded-full transition-all duration-300 ${isOwn ? 'bg-white' : 'bg-primary-500'}`}
-                    style={{ width: `${audioDuration ? (audioCurrentTime / audioDuration) * 100 : 0}%` }}
-                  />
+            <div className={`min-w-[220px] sm:min-w-[260px] ${isOwn ? '' : ''}`}>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleAudio(); }}
+                  className={`p-2 rounded-full flex-shrink-0 transition-all active:scale-95 ${
+                    isOwn ? 'bg-white/20 hover:bg-white/30' : 'bg-primary-100 dark:bg-gray-600 hover:bg-primary-200 dark:hover:bg-gray-500'
+                  }`}
+                >
+                  {audioPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </button>
+                <div className="flex-1 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleAudioSeek(e); }}>
+                  <div className="flex items-end gap-[2px] h-8" ref={waveformRef}>
+                    {Array.from({ length: WAVE_BARS }).map((_, i) => {
+                      const progress = audioDuration ? audioCurrentTime / audioDuration : 0;
+                      const barPos = i / WAVE_BARS;
+                      const isPlayed = barPos <= progress;
+                      const height = 20 + Math.sin(i * 1.5 + 1) * 10 + Math.sin(i * 0.7) * 6;
+                      return (
+                        <div
+                          key={i}
+                          className={`flex-1 rounded-full transition-all duration-100 ${
+                            isOwn
+                              ? isPlayed ? 'bg-white' : 'bg-white/30'
+                              : isPlayed ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-500'
+                          }`}
+                          style={{ height: `${audioPlaying && isPlayed ? height + Math.random() * 4 : height}px` }}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="flex justify-between mt-0.5">
-                  <span className={`text-[10px] ${isOwn ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>{formatAudioTime(audioCurrentTime)}</span>
-                  <span className={`text-[10px] ${isOwn ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>{formatAudioTime(audioDuration)}</span>
-                </div>
+              </div>
+              <div className="flex items-center justify-between mt-1 px-1">
+                <span className={`text-[10px] ${isOwn ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>{formatAudioTime(audioCurrentTime)}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); cycleSpeed(); }}
+                  className={`text-[10px] font-medium px-1.5 py-0.5 rounded transition-colors ${
+                    isOwn
+                      ? 'text-white/70 hover:bg-white/10'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {audioSpeed}x
+                </button>
+                <span className={`text-[10px] ${isOwn ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>{formatAudioTime(audioDuration)}</span>
               </div>
               <audio
                 ref={audioRef}
                 src={message.mediaUrl}
-                onEnded={() => setAudioPlaying(false)}
+                onEnded={() => { setAudioPlaying(false); if (globalAudioRef === audioRef.current) globalAudioRef = null; }}
                 onTimeUpdate={() => setAudioCurrentTime(audioRef.current?.currentTime || 0)}
                 onLoadedMetadata={() => setAudioDuration(audioRef.current?.duration || 0)}
               />

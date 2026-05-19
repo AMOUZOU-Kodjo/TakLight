@@ -114,6 +114,7 @@ router.post('/audio', authMiddleware, upload.single('file'), async (req, res, ne
       mediaUrl: result.secure_url,
       mediaType: 'audio',
       publicId: result.public_id,
+      duration: Math.round(result.duration || 0),
     });
   } catch (error) {
     next(error);

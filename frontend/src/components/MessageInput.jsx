@@ -11,6 +11,7 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [audioLevel, setAudioLevel] = useState(0);
   const { sendMessage, setTyping } = useChatStore();
   const inputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -19,6 +20,10 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }) {
   const fileInputRef = useRef(null);
   const typingTimerRef = useRef(null);
   const isSending = useRef(false);
+  const streamRef = useRef(null);
+  const analyserRef = useRef(null);
+  const levelIntervalRef = useRef(null);
+  const pendingBlobRef = useRef(null);
 
   const handleTyping = useCallback(() => {
     if (!conversationId) return;
@@ -93,9 +98,19 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }) {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
+      pendingBlobRef.current = null;
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
@@ -103,40 +118,27 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }) {
 
       mediaRecorder.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const file = new File([blob], 'recording.webm', { type: 'audio/webm' });
-
-        setIsUploading(true);
-        try {
-          if (!navigator.onLine) {
-            await offlineQueue.addPendingUpload(file, conversationId);
-            return;
-          }
-
-          const formData = new FormData();
-          formData.append('file', file);
-          const { data } = await api.post('/api/upload/audio', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          });
-
-          await sendMessage(conversationId, '', {
-            mediaUrl: data.mediaUrl,
-            mediaType: 'audio',
-          });
-        } catch (err) {
-          console.error('Audio upload failed:', err);
-          await offlineQueue.addPendingUpload(file, conversationId);
-        } finally {
-          setIsUploading(false);
-        }
+        pendingBlobRef.current = blob;
 
         stream.getTracks().forEach((track) => track.stop());
-        setRecordingTime(0);
+        streamRef.current = null;
+        clearInterval(levelIntervalRef.current);
         clearInterval(recordingTimerRef.current);
+        setAudioLevel(0);
+        setRecordingTime(0);
       };
 
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingTime(0);
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      levelIntervalRef.current = setInterval(() => {
+        analyser.getByteFrequencyData(dataArray);
+        const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        setAudioLevel(Math.min(1, avg / 128));
+      }, 60);
+
       recordingTimerRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
@@ -145,11 +147,59 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }) {
     }
   };
 
-  const stopRecording = () => {
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.ondataavailable = null;
+      mediaRecorderRef.current.onstop = null;
+      mediaRecorderRef.current.stop();
+    }
+    if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setIsRecording(false);
+    clearInterval(levelIntervalRef.current);
+    clearInterval(recordingTimerRef.current);
+    setAudioLevel(0);
+    setRecordingTime(0);
+    pendingBlobRef.current = null;
+  };
+
+  const stopRecording = async () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
     setIsRecording(false);
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    const blob = pendingBlobRef.current;
+    if (!blob) return;
+
+    const file = new File([blob], 'recording.webm', { type: 'audio/webm' });
+
+    setIsUploading(true);
+    try {
+      if (!navigator.onLine) {
+        await offlineQueue.addPendingUpload(file, conversationId);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post('/api/upload/audio', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      await sendMessage(conversationId, '', {
+        mediaUrl: data.mediaUrl,
+        mediaType: 'audio',
+      });
+    } catch (err) {
+      console.error('Audio upload failed:', err);
+      await offlineQueue.addPendingUpload(file, conversationId);
+    } finally {
+      setIsUploading(false);
+      pendingBlobRef.current = null;
+    }
   };
 
   const formatTime = (seconds) => {
@@ -167,17 +217,37 @@ export function MessageInput({ conversationId, replyTo, onCancelReply }) {
   return (
     <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       {isRecording && (
-        <div className="px-4 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-red-700">Enregistrement en cours... {formatTime(recordingTime)}</span>
+        <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-800 flex items-center justify-between">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
+            <div className="flex items-end gap-[2px] h-6 flex-1 max-w-[120px]">
+              {Array.from({ length: 24 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-1 bg-red-400 rounded-full transition-all duration-75"
+                  style={{ height: `${Math.max(4, audioLevel * 16 + Math.sin(Date.now() / 100 + i) * 3 + Math.random() * 4)}px` }}
+                />
+              ))}
+            </div>
+            <span className="text-sm font-medium text-red-700 dark:text-red-300 flex-shrink-0">{formatTime(recordingTime)}</span>
           </div>
-          <button
-            onClick={stopRecording}
-            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-          >
-            <StopCircle className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); cancelRecording(); }}
+              className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-full transition-colors"
+              title="Annuler"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <button
+              onClick={stopRecording}
+              disabled={isUploading}
+              className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors disabled:opacity-50"
+              title="Envoyer"
+            >
+              <StopCircle className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       )}
 
