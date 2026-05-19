@@ -325,5 +325,68 @@ router.get('/suggestions', authMiddleware, async (req, res, next) => {
   }
 });
 
+router.post('/:id/batch-delete', authMiddleware, async (req, res, next) => {
+  try {
+    const { messageIds, forEveryone } = req.body;
+
+    if (!Array.isArray(messageIds) || messageIds.length === 0) {
+      return res.status(400).json({ error: 'messageIds must be a non-empty array' });
+    }
+
+    const conversation = await prisma.conversation.findFirst({
+      where: { id: req.params.id, OR: [{ user1Id: req.userId }, { user2Id: req.userId }] },
+    });
+
+    if (!conversation) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    const messages = await prisma.message.findMany({
+      where: { id: { in: messageIds }, conversationId: req.params.id },
+    });
+
+    if (messages.length === 0) {
+      return res.status(404).json({ error: 'No messages found' });
+    }
+
+    const otherUserId = conversation.user1Id === req.userId ? conversation.user2Id : conversation.user1Id;
+
+    if (forEveryone) {
+      const ownMessageIds = messages.filter((m) => m.senderId === req.userId).map((m) => m.id);
+
+      if (ownMessageIds.length === 0) {
+        return res.status(403).json({ error: 'Cannot delete others messages for everyone' });
+      }
+
+      await prisma.message.updateMany({
+        where: { id: { in: ownMessageIds } },
+        data: { isDeleted: true, content: null, mediaUrl: null, mediaType: null, mediaThumbnailUrl: null },
+      });
+
+      for (const msgId of ownMessageIds) {
+        io.to(otherUserId).emit('message:deleted', { messageId: msgId, forEveryone: true });
+      }
+
+      res.json({ deleted: ownMessageIds, forEveryone: true });
+    } else {
+      for (const msg of messages) {
+        const deletedFor = msg.deletedFor ? JSON.parse(msg.deletedFor) : [];
+        if (!deletedFor.includes(req.userId)) {
+          deletedFor.push(req.userId);
+        }
+        await prisma.message.update({
+          where: { id: msg.id },
+          data: { deletedFor: JSON.stringify(deletedFor) },
+        });
+      }
+
+      const allIds = messages.map((m) => m.id);
+      res.json({ deleted: allIds, forEveryone: false });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
 

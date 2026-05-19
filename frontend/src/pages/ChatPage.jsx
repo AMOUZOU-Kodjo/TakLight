@@ -9,7 +9,7 @@ import { MessageInput } from '../components/MessageInput';
 import { ChatHeader } from '../components/ChatHeader';
 import { UserSearch } from '../components/UserSearch';
 import { UserList } from '../components/UserList';
-import { LogOut, User, Shield, Search, Menu, X, Share2 } from 'lucide-react';
+import { LogOut, User, Shield, Search, Menu, X, Share2, Trash2 } from 'lucide-react';
 import { InviteModal } from '../components/InviteModal';
 
 export function ChatPage() {
@@ -21,7 +21,10 @@ export function ChatPage() {
     currentConversation, 
     selectConversation, 
     fetchConversations,
-    isLoading 
+    isLoading,
+    selectedMessages,
+    clearSelection,
+    batchDeleteMessages,
   } = useChatStore();
   
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
@@ -286,11 +289,50 @@ export function ChatPage() {
               onToggleSidebar={toggleSidebar}
             />
             <MessageList onReply={setReplyToMessage} />
+            {selectedMessages.length > 0 ? (
+              <div className="flex items-center justify-between bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => clearSelection()}
+                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  </button>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    {selectedMessages.length} sélectionné{selectedMessages.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="relative group">
+                  <button className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </button>
+                  <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block">
+                    <div className="bg-white dark:bg-gray-700 rounded-xl shadow-xl border border-gray-200 dark:border-gray-600 py-1 min-w-[180px] z-50 overflow-hidden">
+                      <button
+                        onClick={() => { batchDeleteMessages(currentConversation.id, false); }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-3 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-gray-500" />
+                        Supprimer pour moi
+                      </button>
+                      <button
+                        onClick={() => { batchDeleteMessages(currentConversation.id, true); }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Supprimer pour tout le monde
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
             <MessageInput
               conversationId={currentConversation.id}
               replyTo={replyToMessage}
               onCancelReply={() => setReplyToMessage(null)}
             />
+            )}
           </>
         ) : (
           <>

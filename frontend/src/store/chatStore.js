@@ -14,6 +14,7 @@ export const useChatStore = create((set, get) => ({
   nextCursor: null,
   typingUsers: new Set(),
   presence: {},
+  selectedMessages: [],
 
   fetchConversations: async () => {
     set({ isLoading: true });
@@ -148,6 +149,48 @@ export const useChatStore = create((set, get) => ({
       }
     } catch (err) {
       console.error('Failed to delete message:', err);
+    }
+  },
+
+  toggleSelectMessage: (messageId) => {
+    set((state) => {
+      const selected = state.selectedMessages.includes(messageId)
+        ? state.selectedMessages.filter((id) => id !== messageId)
+        : [...state.selectedMessages, messageId];
+      return { selectedMessages: selected };
+    });
+  },
+
+  clearSelection: () => {
+    set({ selectedMessages: [] });
+  },
+
+  batchDeleteMessages: async (conversationId, forEveryone = false) => {
+    const { selectedMessages } = get();
+    if (selectedMessages.length === 0) return;
+    try {
+      await api.post(`/api/conversations/${conversationId}/batch-delete`, {
+        messageIds: selectedMessages,
+        forEveryone,
+      });
+
+      if (forEveryone) {
+        set((state) => ({
+          messages: state.messages.map((m) =>
+            state.selectedMessages.includes(m.id)
+              ? { ...m, isDeleted: true, content: null, mediaUrl: null, mediaType: null, mediaThumbnailUrl: null }
+              : m
+          ),
+          selectedMessages: [],
+        }));
+      } else {
+        set((state) => ({
+          messages: state.messages.filter((m) => !state.selectedMessages.includes(m.id)),
+          selectedMessages: [],
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to batch delete messages:', err);
     }
   },
 }));

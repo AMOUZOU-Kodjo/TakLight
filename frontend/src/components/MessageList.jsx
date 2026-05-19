@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
-import { Check, CheckCheck, AlertCircle, Loader2, Play, Pause, Reply, MoreVertical, Trash2 } from 'lucide-react';
+import { Check, CheckCheck, AlertCircle, Loader2, Play, Pause, Reply, MoreVertical, Trash2, CheckSquare, Square } from 'lucide-react';
 
 const GROUP_INTERVAL = 120000;
 
 export function MessageList({ onReply }) {
-  const { messages, isLoading, hasMore, nextCursor, fetchMessages, currentConversation, typingUsers } = useChatStore();
+  const { messages, isLoading, hasMore, nextCursor, fetchMessages, currentConversation, typingUsers, selectedMessages, toggleSelectMessage, clearSelection } = useChatStore();
   const { user } = useAuthStore();
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
@@ -53,7 +53,18 @@ export function MessageList({ onReply }) {
       ) : (
         <>
           {groupedMessages.map((message, idx) => (
-            <MessageBubble key={message.id || message.tempId} message={message} isOwn={message.senderId === user?.id} onReply={onReply} showAvatar={message.showAvatar} isFirstInGroup={message.isFirstInGroup} />
+            <MessageBubble
+              key={message.id || message.tempId}
+              message={message}
+              isOwn={message.senderId === user?.id}
+              onReply={onReply}
+              showAvatar={message.showAvatar}
+              isFirstInGroup={message.isFirstInGroup}
+              isSelected={selectedMessages.includes(message.id)}
+              onToggleSelect={() => toggleSelectMessage(message.id)}
+              selectMode={selectedMessages.length > 0}
+              tempId={message.tempId}
+            />
           ))}
           {typingUsers.size > 0 && currentConversation && (
             <div className="flex items-center gap-3 px-1 sm:px-4 py-2">
@@ -82,7 +93,7 @@ export function MessageList({ onReply }) {
   );
 }
 
-function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup }) {
+function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup, isSelected, onToggleSelect, selectMode, tempId }) {
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [audioDuration, setAudioDuration] = useState(0);
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
@@ -110,6 +121,12 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup }) 
     );
   }
 
+  const handleBubbleClick = () => {
+    if (selectMode && onToggleSelect) {
+      onToggleSelect();
+    }
+  };
+
   const toggleAudio = () => {
     if (audioRef.current) {
       if (audioPlaying) audioRef.current.pause();
@@ -125,7 +142,7 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup }) 
 
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} items-end mb-0.5 animate-fade-in`}>
-      {!isOwn && (
+      {!isOwn && !selectMode && (
         <div className={`w-8 h-8 rounded-full overflow-hidden bg-gray-300 flex-shrink-0 mr-2 transition-all duration-200 ${showAvatar ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none'}`}>
           {message.sender?.avatarUrl ? (
             <img src={message.sender.avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -136,14 +153,22 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup }) 
           )}
         </div>
       )}
+      {selectMode && (
+        <button onClick={onToggleSelect} className="mx-2 flex-shrink-0">
+          {isSelected ? <CheckSquare className="w-5 h-5 text-primary-600" /> : <Square className="w-5 h-5 text-gray-400" />}
+        </button>
+      )}
       <div className={`max-w-[85%] sm:max-w-[70%] ${isOwn ? 'order-1' : 'order-1'}`}>
-        <div className={`
-          relative px-3 sm:px-4 py-2 shadow-sm
+        <div
+          onClick={handleBubbleClick}
+          className={`
+          relative px-3 sm:px-4 py-2 shadow-sm cursor-pointer
           ${isOwn
             ? 'bg-gradient-to-br from-primary-500 to-primary-700 text-white rounded-2xl rounded-tr-sm'
             : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-2xl rounded-tl-sm shadow-sm border border-gray-100 dark:border-gray-600'
           }
           ${message.localStatus === 'failed' ? 'opacity-70' : ''}
+          ${isSelected ? (isOwn ? 'ring-2 ring-primary-300' : 'ring-2 ring-primary-400') : ''}
         `}>
           {message.replyTo && (
             <div className={`mb-2 pl-2.5 border-l-[3px] rounded-sm ${isOwn ? 'border-white/60' : 'border-primary-400'} text-xs`}>
@@ -162,7 +187,7 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup }) 
                     className={`w-full max-w-[280px] sm:max-w-sm cursor-pointer hover:opacity-95 transition-opacity ${imageLoaded ? 'block' : 'hidden'}`}
                     loading="lazy"
                     onLoad={() => setImageLoaded(true)}
-                    onClick={() => window.open(message.mediaUrl, '_blank')}
+                    onClick={(e) => { e.stopPropagation(); window.open(message.mediaUrl, '_blank'); }}
                   />
                 )}
               </div>
@@ -171,7 +196,7 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup }) 
           ) : message.mediaType === 'audio' ? (
             <div className={`flex items-center gap-3 min-w-[180px] sm:min-w-[220px] ${isOwn ? '' : ''}`}>
               <button
-                onClick={toggleAudio}
+                onClick={(e) => { e.stopPropagation(); toggleAudio(); }}
                 className={`p-2.5 rounded-full flex-shrink-0 transition-all ${
                   isOwn ? 'bg-white/20 hover:bg-white/30 active:scale-95' : 'bg-primary-100 dark:bg-gray-600 hover:bg-primary-200 dark:hover:bg-gray-500 active:scale-95'
                 }`}
@@ -202,6 +227,7 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup }) 
             <p className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
           )}
 
+          {!selectMode && (
           <div className={`flex items-center justify-end gap-1 mt-1 -mb-1 ${isOwn ? 'text-white/65' : 'text-gray-400 dark:text-gray-500'}`}>
             <div className="relative" ref={menuRef}>
               <button
@@ -213,6 +239,13 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup }) 
               </button>
               {showMenu && (
                 <div className={`absolute bottom-full mb-1 ${isOwn ? 'right-0' : 'left-0'} bg-white dark:bg-gray-700 rounded-xl shadow-xl border border-gray-200 dark:border-gray-600 py-1 min-w-[180px] z-50 overflow-hidden`}>
+                  <button
+                    onClick={() => { onToggleSelect(); setShowMenu(false); }}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-3 transition-colors"
+                  >
+                    <CheckSquare className="w-4 h-4 text-gray-500" />
+                    Sélectionner
+                  </button>
                   {onReply && (
                     <button
                       onClick={() => { onReply(message); setShowMenu(false); }}
@@ -244,6 +277,7 @@ function MessageBubble({ message, isOwn, onReply, showAvatar, isFirstInGroup }) 
             <span className="text-[10px] leading-none">{new Date(message.sentAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
             {isOwn && <MessageStatus message={message} />}
           </div>
+          )}
         </div>
       </div>
     </div>
