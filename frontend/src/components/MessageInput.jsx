@@ -40,6 +40,15 @@ export function MessageInput({ conversationId }) {
     };
   }, [conversationId, setTyping]);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!content.trim()) return;
+    await sendMessage(conversationId, content.trim());
+    setContent('');
+    setShowEmoji(false);
+    inputRef.current?.focus();
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
