@@ -12,34 +12,34 @@ export function ChatHeader({ conversation, onToggleSidebar }) {
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+    <div className="bg-white border-b border-gray-200 px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3">
       <button
         onClick={onToggleSidebar}
-        className="p-2 hover:bg-gray-100 rounded-full md:hidden"
+        className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full md:hidden"
       >
-        <ArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
 
       <div className="relative flex-shrink-0">
-        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary-100 rounded-full flex items-center justify-center">
           {conversation.otherUser.avatarUrl ? (
             <img
               src={conversation.otherUser.avatarUrl}
               alt={conversation.otherUser.username}
-              className="w-10 h-10 rounded-full object-cover"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
             />
           ) : (
-            <User className="w-5 h-5 text-primary-600" />
+            <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600" />
           )}
         </div>
         {isOnline && (
-          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-white" />
         )}
       </div>
 
       <div className="flex-1 min-w-0">
-        <h2 className="font-semibold text-gray-900 truncate">{conversation.otherUser.username}</h2>
-        <p className="text-xs text-gray-500">
+        <h2 className="font-semibold text-gray-900 truncate text-sm sm:text-base">{conversation.otherUser.username}</h2>
+        <p className="text-[10px] sm:text-xs text-gray-500">
           {isOnline ? (
             <span className="text-green-600">En ligne</span>
           ) : lastSeen ? (
@@ -51,15 +51,15 @@ export function ChatHeader({ conversation, onToggleSidebar }) {
       </div>
 
       <div className="flex items-center gap-1">
-        <button className="p-2 hover:bg-gray-100 rounded-full text-gray-600" title="Appel audio">
-          <Phone className="w-5 h-5" />
+        <button className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full text-gray-600" title="Appel audio">
+          <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={startVideoCall}
-          className="p-2 hover:bg-gray-100 rounded-full text-gray-600"
+          className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full text-gray-600"
           title="Appel vidéo"
         >
-          <Video className="w-5 h-5" />
+          <Video className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
     </div>

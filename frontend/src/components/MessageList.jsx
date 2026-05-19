@@ -24,7 +24,7 @@ export function MessageList() {
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-gray-50 to-gray-100"
+      className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 bg-gradient-to-b from-gray-50 to-gray-100"
     >
       {isLoading && messages.length === 0 ? (
         <div className="flex items-center justify-center py-8">
@@ -84,30 +84,30 @@ function MessageBubble({ message, isOwn }) {
   }
 
   return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} items-end gap-2 animate-fade-in`}>
+    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} items-end gap-1.5 sm:gap-2 animate-fade-in`}>
       {!isOwn && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-gray-300">
+        <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-gray-300">
           {message.sender?.avatarUrl ? (
             <img src={message.sender.avatarUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-gray-600">
+            <div className="w-full h-full flex items-center justify-center text-[10px] sm:text-xs font-semibold text-gray-600">
               {message.sender?.username?.charAt(0).toUpperCase() || '?'}
             </div>
           )}
         </div>
       )}
-      <div className={`max-w-[75%] px-4 py-2 shadow-sm ${
+      <div className={`max-w-[85%] sm:max-w-[75%] px-3 sm:px-4 py-1.5 sm:py-2 shadow-sm ${
         isOwn ? 'message-bubble-sent' : 'message-bubble-received'
       } ${message.localStatus === 'failed' ? 'opacity-70' : ''}`}>
         {message.mediaType === 'image' ? (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="relative rounded-lg overflow-hidden bg-gray-200">
-              {!imageLoaded && <div className="w-64 h-48 skeleton" />}
-              {message.mediaThumbnailUrl && (
+              {!imageLoaded && <div className="w-full aspect-video skeleton" />}
+              {message.mediaUrl && (
                 <img
-                  src={message.mediaThumbnailUrl}
+                  src={message.mediaThumbnailUrl || message.mediaUrl}
                   alt="Photo"
-                  className={`rounded-lg max-w-xs cursor-pointer hover:opacity-90 transition-opacity ${imageLoaded ? 'block' : 'hidden'}`}
+                  className={`w-full max-w-[280px] sm:max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity ${imageLoaded ? 'block' : 'hidden'}`}
                   loading="lazy"
                   onLoad={() => setImageLoaded(true)}
                   onClick={() => window.open(message.mediaUrl, '_blank')}
@@ -117,10 +117,10 @@ function MessageBubble({ message, isOwn }) {
             {message.content && <p className="text-sm">{message.content}</p>}
           </div>
         ) : message.mediaType === 'audio' ? (
-          <div className="flex items-center gap-3 min-w-[200px]">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-[160px] sm:min-w-[200px]">
             <button
               onClick={toggleAudio}
-              className={`p-2.5 rounded-full flex-shrink-0 ${
+              className={`p-2 sm:p-2.5 rounded-full flex-shrink-0 ${
                 isOwn ? 'bg-white/20 hover:bg-white/30' : 'bg-gray-100 hover:bg-gray-200'
               } transition-colors`}
             >
@@ -157,11 +157,11 @@ function MessageBubble({ message, isOwn }) {
           {isOwn && <MessageStatus message={message} />}
         </div>
         {isOwn && (
-          <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-gray-300">
+          <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-gray-300">
             {message.sender?.avatarUrl ? (
               <img src={message.sender.avatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-gray-600">
+              <div className="w-full h-full flex items-center justify-center text-[10px] sm:text-xs font-semibold text-gray-600">
                 {message.sender?.username?.charAt(0).toUpperCase() || '?'}
               </div>
             )}

@@ -47,7 +47,7 @@ export function ConnectionBanner() {
 
   return (
     <div
-      className={`sticky top-0 z-50 px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2 ${
+      className={`sticky top-0 z-50 px-3 sm:px-4 py-1.5 sm:py-2 text-center text-xs sm:text-sm font-medium flex items-center justify-center gap-1.5 sm:gap-2 ${
         !isOnline
           ? 'bg-red-500 text-white'
           : isSlowConnection
@@ -57,21 +57,25 @@ export function ConnectionBanner() {
     >
       {!isOnline ? (
         <>
-          <WifiOff className="w-4 h-4 shrink-0" />
+          <WifiOff className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
           <span>Hors connexion</span>
           {pendingCount > 0 && (
-            <span className="opacity-90">— {pendingCount} message{pendingCount > 1 ? 's' : ''} en attente</span>
+            <span className="opacity-90 hidden sm:inline">— {pendingCount} message{pendingCount > 1 ? 's' : ''} en attente</span>
+          )}
+          {pendingCount > 0 && (
+            <span className="opacity-90 sm:hidden">({pendingCount})</span>
           )}
         </>
       ) : isSlowConnection ? (
         <>
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>Connexion très lente — Mode économie activé</span>
+          <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+          <span className="hidden sm:inline">Connexion très lente — Mode économie activé</span>
+          <span className="sm:hidden">Connexion lente</span>
         </>
       ) : (
         <>
-          <Clock className="w-4 h-4 shrink-0" />
-          <span>Envoi de {pendingCount} message{pendingCount > 1 ? 's' : ''}...</span>
+          <Clock className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+          <span>Envoi en cours ({pendingCount})</span>
         </>
       )}
     </div>

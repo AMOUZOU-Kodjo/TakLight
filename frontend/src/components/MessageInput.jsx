@@ -182,7 +182,7 @@ export function MessageInput({ conversationId }) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 p-3">
+      <form onSubmit={handleSubmit} className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3">
         <input
           type="file"
           ref={fileInputRef}
@@ -195,25 +195,25 @@ export function MessageInput({ conversationId }) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isRecording}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+          className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
           title="Joindre un fichier"
         >
           {isUploading ? (
-            <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
           ) : (
-            <Paperclip className="w-5 h-5" />
+            <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
           )}
         </button>
 
         <button
           type="button"
           onClick={() => setShowEmoji(!showEmoji)}
-          className={`p-2 hover:bg-gray-100 rounded-full transition-colors ${
+          className={`p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors ${
             showEmoji ? 'text-primary-600' : 'text-gray-500'
           }`}
           title="Emojis"
         >
-          <Smile className="w-5 h-5" />
+          <Smile className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         <input
@@ -222,7 +222,7 @@ export function MessageInput({ conversationId }) {
           value={content}
           onChange={handleInputChange}
           placeholder="Votre message..."
-          className="flex-1 input-field"
+          className="flex-1 input-field text-sm sm:text-base"
           maxLength={2000}
           disabled={isRecording}
         />
@@ -231,23 +231,23 @@ export function MessageInput({ conversationId }) {
           type="button"
           onClick={isRecording ? stopRecording : startRecording}
           disabled={isUploading}
-          className={`p-2 rounded-full transition-colors disabled:opacity-50 ${
+          className={`p-1.5 sm:p-2 rounded-full transition-colors disabled:opacity-50 ${
             isRecording
               ? 'bg-red-500 text-white hover:bg-red-600'
               : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
           }`}
           title={isRecording ? 'Arrêter' : 'Enregistrer un audio'}
         >
-          <Mic className="w-5 h-5" />
+          <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         <button
           type="submit"
           disabled={!content.trim() || isRecording || isUploading}
-          className="p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 sm:p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title="Envoyer"
         >
-          <Send className="w-5 h-5" />
+          <Send className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </form>
     </div>

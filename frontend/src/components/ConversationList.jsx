@@ -26,39 +26,39 @@ export function ConversationList({ conversations, currentId, onSelect }) {
           <button
             key={conv.id}
             onClick={() => onSelect(conv)}
-            className={`w-full p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100 ${
+            className={`w-full p-3 sm:p-4 flex items-center gap-2 sm:gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100 ${
               isSelected ? 'bg-primary-50 hover:bg-primary-50' : ''
             }`}
           >
             <div className="relative flex-shrink-0">
-              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 rounded-full flex items-center justify-center">
                 {conv.otherUser.avatarUrl ? (
                   <img
                     src={conv.otherUser.avatarUrl}
                     alt={conv.otherUser.username}
-                    className="w-12 h-12 rounded-full object-cover"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
                   />
                 ) : (
-                  <User className="w-6 h-6 text-primary-600" />
+                  <User className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
                 )}
               </div>
               {isOnline && (
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-white" />
               )}
             </div>
 
             <div className="flex-1 min-w-0 text-left">
               <div className="flex items-center justify-between">
-                <p className="font-medium text-gray-900 truncate">{conv.otherUser.username}</p>
+                <p className="font-medium text-gray-900 truncate text-sm sm:text-base">{conv.otherUser.username}</p>
                 {conv.lastMessageAt && (
-                  <span className="text-xs text-gray-500 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
+                  <span className="text-[10px] sm:text-xs text-gray-500 flex items-center gap-1">
+                    <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                     {formatDate(conv.lastMessageAt)}
                   </span>
                 )}
               </div>
               {conv.lastMessage && (
-                <p className="text-sm text-gray-500 truncate mt-0.5">{conv.lastMessage}</p>
+                <p className="text-xs sm:text-sm text-gray-500 truncate mt-0.5">{conv.lastMessage}</p>
               )}
             </div>
           </button>
