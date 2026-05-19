@@ -6,7 +6,7 @@
   "engines": { "node": ">=18.0.0" },
   "scripts": {
     "dev": "node --watch src/index.js",
-    "build:frontend": "cd \"../frontend\" && npm install && npm run build",
+    "build:frontend": "cd \"../frontend\" && npm install && npx vite build",
     "build": "npm run build:frontend && npx prisma generate",
     "start": "node src/index.js",
     "prisma:generate": "prisma generate",
